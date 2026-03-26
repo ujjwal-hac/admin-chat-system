@@ -18,6 +18,22 @@ const User = mongoose.model("User", {
   password: String,
   role: String
 });
+async function createDefaultUser() {
+  const existing = await User.findOne({ username: "admin" });
+
+  if (!existing) {
+    await User.create({
+      username: "admin",
+      password: "123",
+      role: "admin"
+    });
+    console.log("Default admin created ✅");
+  } else {
+    console.log("Admin already exists");
+  }
+}
+
+createDefaultUser();
 
 // Message Schema
 const Message = mongoose.model("Message", {

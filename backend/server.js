@@ -3,22 +3,31 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
+
+// middlewares
 app.use(express.json());
 app.use(cors());
 
-// MongoDB connection
-const mongoose = require("mongoose");
-
-mongoose.connect("mongodb+srv://chattingwithujjwal:ujjwal123@cluster0.aduvqnh.mongodb.net/chatDB?retryWrites=true&w=majority")
-.then(() => console.log("MongoDB Connected ✅"))
-.catch(err => console.log("Mongo Error:", err));
-// User Schema
+// ✅ Models
 const User = mongoose.model("User", {
   username: String,
   password: String,
   role: String
 });
-async function createDefaultUser() {
+
+const Message = mongoose.model("Message", {
+  sender: String,
+  receiver: String,
+  message: String,
+  seen: Boolean
+});
+
+// ✅ MongoDB connection
+mongoose.connect("mongodb+srv://chattingwithujjwal:ujjwal123@cluster0.aduvqnh.mongodb.net/chatDB?retryWrites=true&w=majority")
+.then(async () => {
+  console.log("MongoDB Connected ✅");
+
+  // create default admin safely
   const existing = await User.findOne({ username: "admin" });
 
   if (!existing) {
@@ -31,32 +40,39 @@ async function createDefaultUser() {
   } else {
     console.log("Admin already exists");
   }
-}
 
-createDefaultUser();
+})
+.catch(err => console.log("Mongo Error ❌", err));
 
-// Message Schema
-const Message = mongoose.model("Message", {
-  sender: String,
-  receiver: String,
-  message: String,
-  seen: Boolean
+// ✅ Routes
+
+// test route
+app.get("/", (req, res) => {
+  res.send("Backend working 🚀");
 });
 
-// LOGIN
+// login
 app.post("/login", async (req, res) => {
   const user = await User.findOne(req.body);
-  if (user) res.json(user);
-  else res.json(null);
+
+  if (user) {
+    res.json(user);
+  } else {
+    res.json(null);
+  }
 });
 
-// SEND MESSAGE
+// send message
 app.post("/send", async (req, res) => {
-  await Message.create({ ...req.body, seen: false });
-  res.send("sent");
+  await Message.create({
+    ...req.body,
+    seen: false
+  });
+
+  res.send("Message sent ✅");
 });
 
-// GET MESSAGES
+// get messages between 2 users
 app.get("/messages/:user1/:user2", async (req, res) => {
   const { user1, user2 } = req.params;
 
@@ -70,11 +86,9 @@ app.get("/messages/:user1/:user2", async (req, res) => {
   res.json(messages);
 });
 
+// ✅ Start server (IMPORTANT for Render)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
-});
-app.get("/", (req, res) => {
-  res.send("Server is running 🚀");
 });

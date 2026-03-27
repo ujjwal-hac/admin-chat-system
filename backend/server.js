@@ -3,12 +3,10 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
-
-// middlewares
 app.use(express.json());
 app.use(cors());
 
-// ✅ Models
+// MODELS
 const User = mongoose.model("User", {
   username: String,
   password: String,
@@ -22,57 +20,56 @@ const Message = mongoose.model("Message", {
   seen: Boolean
 });
 
-// ✅ MongoDB connection
+// CONNECT DB
 mongoose.connect("mongodb+srv://chattingwithujjwal:ujjwal123@cluster0.aduvqnh.mongodb.net/chatDB?retryWrites=true&w=majority")
 .then(async () => {
   console.log("MongoDB Connected ✅");
 
-  // create default admin safely
-  const existing = await User.findOne({ username: "admin" });
-
-  if (!existing) {
+  // create admin
+  const admin = await User.findOne({ username: "admin" });
+  if (!admin) {
     await User.create({
       username: "admin",
       password: "123",
       role: "admin"
     });
-    console.log("Default admin created ✅");
-  } else {
-    console.log("Admin already exists");
   }
 
-})
-.catch(err => console.log("Mongo Error ❌", err));
+  // create user1
+  const user1 = await User.findOne({ username: "user1" });
+  if (!user1) {
+    await User.create({
+      username: "user1",
+      password: "123",
+      role: "user"
+    });
+  }
 
-// ✅ Routes
+  console.log("Users ready ✅");
+});
 
-// test route
+// ROUTES
+
 app.get("/", (req, res) => {
   res.send("Backend working 🚀");
 });
 
-// login
+// LOGIN
 app.post("/login", async (req, res) => {
   const user = await User.findOne(req.body);
-
-  if (user) {
-    res.json(user);
-  } else {
-    res.json(null);
-  }
+  res.json(user);
 });
 
-// send message
+// SEND MESSAGE
 app.post("/send", async (req, res) => {
   await Message.create({
     ...req.body,
     seen: false
   });
-
-  res.send("Message sent ✅");
+  res.send("sent");
 });
 
-// get messages between 2 users
+// GET MESSAGES
 app.get("/messages/:user1/:user2", async (req, res) => {
   const { user1, user2 } = req.params;
 
@@ -86,9 +83,8 @@ app.get("/messages/:user1/:user2", async (req, res) => {
   res.json(messages);
 });
 
-// ✅ Start server (IMPORTANT for Render)
+// START SERVER
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+  console.log("Running on " + PORT);
 });

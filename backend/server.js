@@ -25,27 +25,22 @@ mongoose.connect("mongodb+srv://chattingwithujjwal:ujjwal123@cluster0.aduvqnh.mo
 .then(async () => {
   console.log("MongoDB Connected ✅");
 
-  // create admin
-  const admin = await User.findOne({ username: "admin" });
-  if (!admin) {
-    await User.create({
-      username: "admin",
-      password: "123",
-      role: "admin"
-    });
+  const users = [
+    { username: "admin", password: "myloveforcoding", role: "admin" },
+    { username: "user1", password: "123", role: "user" },
+    { username: "anuj_boss", password: "anujhere", role: "user" },
+    { username: "sakshi", password: "19062008", role: "user" },
+    { username: "Ayush_pant", password: "ayushhere", role: "user" }
+  ];
+
+  for (let u of users) {
+    const exist = await User.findOne({ username: u.username });
+    if (!exist) {
+      await User.create(u);
+    }
   }
 
-  // create user1
-  const user1 = await User.findOne({ username: "user1" });
-  if (!user1) {
-    await User.create({
-      username: "user1",
-      password: "123",
-      role: "user"
-    });
-  }
-
-  console.log("Users ready ✅");
+  console.log("All users ready ✅");
 });
 
 // ROUTES
@@ -60,7 +55,7 @@ app.post("/login", async (req, res) => {
   res.json(user);
 });
 
-// GET USERS (ADMIN PANEL)
+// GET USERS
 app.get("/users", async (req, res) => {
   const users = await User.find({ role: "user" });
   res.json(users);

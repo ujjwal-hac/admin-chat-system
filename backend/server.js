@@ -20,27 +20,22 @@ const Message = mongoose.model("Message", {
   seen: Boolean
 });
 
-// CONNECT DB
+// CONNECT
 mongoose.connect("mongodb+srv://chattingwithujjwal:ujjwal123@cluster0.aduvqnh.mongodb.net/chatDB?retryWrites=true&w=majority")
 .then(async () => {
   console.log("MongoDB Connected ✅");
 
-  const users = [
+  // 🔥 FORCE RESET USERS (IMPORTANT)
+  await User.deleteMany({});
+
+  await User.insertMany([
     { username: "admin", password: "myloveforcoding", role: "admin" },
-    { username: "user1", password: "123", role: "user" },
     { username: "anuj_boss", password: "anujhere", role: "user" },
     { username: "sakshi", password: "19062008", role: "user" },
     { username: "Ayush_pant", password: "ayushhere", role: "user" }
-  ];
+  ]);
 
-  for (let u of users) {
-    const exist = await User.findOne({ username: u.username });
-    if (!exist) {
-      await User.create(u);
-    }
-  }
-
-  console.log("All users ready ✅");
+  console.log("Users reset ✅");
 });
 
 // ROUTES
@@ -49,19 +44,24 @@ app.get("/", (req, res) => {
   res.send("Backend working 🚀");
 });
 
-// LOGIN
+// LOGIN (SAFE CHECK)
 app.post("/login", async (req, res) => {
-  const user = await User.findOne(req.body);
+  const { username, password } = req.body;
+
+  const user = await User.findOne({ username, password });
+
+  if (!user) return res.json(null);
+
   res.json(user);
 });
 
-// GET USERS
+// USERS
 app.get("/users", async (req, res) => {
   const users = await User.find({ role: "user" });
   res.json(users);
 });
 
-// SEND MESSAGE
+// SEND
 app.post("/send", async (req, res) => {
   await Message.create({
     ...req.body,
@@ -70,22 +70,20 @@ app.post("/send", async (req, res) => {
   res.send("sent");
 });
 
-// GET MESSAGES
-app.get("/messages/:user1/:user2", async (req, res) => {
-  const { user1, user2 } = req.params;
+// MESSAGES
+app.get("/messages/:u1/:u2", async (req, res) => {
+  const { u1, u2 } = req.params;
 
-  const messages = await Message.find({
+  const msgs = await Message.find({
     $or: [
-      { sender: user1, receiver: user2 },
-      { sender: user2, receiver: user1 }
+      { sender: u1, receiver: u2 },
+      { sender: u2, receiver: u1 }
     ]
   });
 
-  res.json(messages);
+  res.json(msgs);
 });
 
-// START SERVER
+// START
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Running on " + PORT);
-});
+app.listen(PORT, () => console.log("Running on " + PORT));

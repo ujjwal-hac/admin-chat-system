@@ -60,6 +60,12 @@ app.post("/login", async (req, res) => {
   res.json(user);
 });
 
+// GET USERS (ADMIN PANEL)
+app.get("/users", async (req, res) => {
+  const users = await User.find({ role: "user" });
+  res.json(users);
+});
+
 // SEND MESSAGE
 app.post("/send", async (req, res) => {
   await Message.create({
